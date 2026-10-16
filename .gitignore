@@ -1,0 +1,17 @@
+# Secrets and local settings
+.env
+profiles.toml
+
+# Conversation and tool logs (contain what you typed and all tool output)
+logs/
+
+# Scratch notes
+idea.txt
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store

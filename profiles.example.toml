@@ -1,0 +1,34 @@
+# Copy to profiles.toml to define your own profiles. profiles.toml is optional.
+# Pick one with LLM_PROFILE=<name> in .env.
+#
+# Built-in profiles you can extend or replace:
+#   small  scaffolding for local/small models: suggest_queries on, tight limits
+#   large  for big models: suggest_queries off, generous limits
+# LLM_PROFILE=auto (the default) uses small for Ollama or a localhost server,
+# and large for hosted services.
+#
+# Each tool is:  false (hidden) | true (on, keep inherited options) | a table of options.
+# Tools you don't mention are inherited from `extends`, or off if there is no parent.
+# search_papers and get_paper can't be turned off: they apply the retraction check.
+#
+# Options:
+#   every tool       max_calls        most calls per question (1-50)
+#   search_papers    limit            most results per search (1-25)
+#                    abstract_chars   abstract length in search results (100-4000)
+
+# A tweak of "small" for a bigger model running on Ollama:
+[mine]
+extends = "small"
+
+[mine.tools]
+suggest_queries = false
+
+[mine.tools.search_papers]
+limit = 5
+max_calls = 5
+
+# A profile that replaces the built-in "small" (extends the original by the same name):
+# [small]
+# extends = "small"
+# [small.tools.search_papers]
+# limit = 4

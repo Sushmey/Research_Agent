@@ -1,0 +1,4 @@
+# Python 3.11 or newer (profiles.toml is read with the built-in tomllib)
+requests>=2.31
+# Only needed when LLM_PROVIDER=anthropic
+anthropic>=0.40
