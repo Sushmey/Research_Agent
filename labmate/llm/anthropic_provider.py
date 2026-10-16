@@ -17,6 +17,8 @@ format differs in ways that matter here:
 
 import json
 
+from labmate import ui
+
 try:
     import anthropic
 except ImportError as exc:
@@ -142,11 +144,11 @@ def _from_response(response):
 
     stop = getattr(response, "stop_reason", None)
     if stop == "max_tokens":
-        print("[llm] warning: the reply was cut off at max_tokens. Raise LLM_MAX_TOKENS in .env.")
+        ui.warn("[llm] warning: the reply was cut off at max_tokens. Raise LLM_MAX_TOKENS in .env.")
     elif stop == "refusal":
         details = getattr(response, "stop_details", None)
         category = getattr(details, "category", None)
-        print(f"[llm] warning: the model declined this request (category: {category}).")
+        ui.warn(f"[llm] warning: the model declined this request (category: {category}).")
     return msg
 
 

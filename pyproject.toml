@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "labmate"
+version = "0.1.0"
+description = "A research lab mate: tests whether your idea already exists, finds related papers, and checks them for retractions."
+requires-python = ">=3.11"
+dependencies = ["requests>=2.31", "rich>=13"]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+
+[project.scripts]
+labmate = "labmate.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["labmate*"]

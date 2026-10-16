@@ -1,6 +1,6 @@
 """get_paper: fetch one paper by OpenAlex ID or DOI."""
 
-from research.sources import openalex
+from labmate.sources import openalex
 
 SCHEMA = {
     "type": "function",

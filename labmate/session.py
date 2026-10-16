@@ -24,6 +24,8 @@ import datetime
 import json
 import os
 import threading
+
+from labmate import ui
 from collections import deque
 
 HISTORY_MESSAGES = 10  # most recent messages (questions and answers) the model sees
@@ -54,12 +56,13 @@ class _JsonlFile:
                 f.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
         except OSError as exc:
             self._failed = True
-            print(f"[log] can't write {self.path}: {exc}. Continuing without it.")
+            ui.warn(f"[log] can't write {self.path}: {exc}. Continuing without it.")
 
 
-def _read_recent(path, count):
-    """The last `count` user/assistant messages in a conversation file. Reads
-    the whole file but keeps only the tail; unreadable lines are skipped."""
+def read_recent(path, count):
+    """The last `count` user/assistant records (with their timestamps) in a
+    conversation file, counting only what came after the latest "clear" marker.
+    Reads the whole file but keeps only the tail; unreadable lines are skipped."""
     recent = deque(maxlen=count)
     try:
         with open(path, encoding="utf-8") as f:
@@ -68,11 +71,19 @@ def _read_recent(path, count):
                     r = json.loads(line)
                 except json.JSONDecodeError:
                     continue
-                if r.get("role") in ("user", "assistant") and isinstance(r.get("content"), str):
-                    recent.append({"role": r["role"], "content": r["content"]})
+                if r.get("event") == "clear":
+                    recent.clear()
+                elif r.get("role") in ("user", "assistant") and isinstance(r.get("content"), str):
+                    recent.append(r)
     except OSError:
         pass
     return list(recent)
+
+
+def clear_history(log_dir=LOG_DIR):
+    """Make the model forget the conversation so far. The file is not touched
+    except for a marker line at the end, so the full record stays on disk."""
+    _JsonlFile(os.path.join(log_dir, "conversation.jsonl")).write({"ts": _now(), "event": "clear"})
 
 
 class Session:
@@ -83,10 +94,20 @@ class Session:
         self._conversation = _JsonlFile(os.path.join(log_dir, "conversation.jsonl"))
         self._tools = _JsonlFile(os.path.join(log_dir, "tools.jsonl"))
         # Only the tail is needed in memory; the file keeps everything.
-        self._recent = _read_recent(self._conversation.path, window)
+        self._recent = [
+            {"role": r["role"], "content": r["content"]}
+            for r in read_recent(self._conversation.path, window)
+        ]
         self.loaded = len(self._recent)  # messages carried over from earlier runs
         self._turn = []  # this question's messages, including its tool calls
+        self._mark = 0  # how much of _turn is a consistent state to rewind to
         self._turn_number = 0
+
+    def clear(self):
+        """Forget the conversation so far (the file keeps it; see clear_history)."""
+        self._conversation.write({"ts": _now(), "session": self.id, "event": "clear"})
+        self._recent = []
+        self.loaded = 0
 
     # --- what the model sees -------------------------------------------------
 
@@ -117,12 +138,24 @@ class Session:
             self._recent = (self._recent + [self._turn[0]])[-self.window :]
         self._turn_number += 1
         self._turn = [{"role": "user", "content": question}]
+        self._mark = 1
         self._conversation.write({"ts": _now(), "session": self.id, "role": "user", "content": question})
         self.debug("question", content=question)
 
     def add(self, *messages):
         """Add the model's replies and tool results for this turn (memory only)."""
         self._turn.extend(messages)
+
+    def mark(self):
+        """Note that the turn is in a consistent state right now: every tool
+        call so far has its result."""
+        self._mark = len(self._turn)
+
+    def rewind(self):
+        """Drop whatever was added since the last mark(), e.g. a tool call that
+        was interrupted before its results came back. Sending those without
+        their results would be rejected by the model service."""
+        del self._turn[self._mark :]
 
     def finish_turn(self, answer):
         """Record the answer. The question and answer join the history the

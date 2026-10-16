@@ -28,7 +28,7 @@ import tomllib
 from types import SimpleNamespace
 from urllib.parse import urlparse
 
-from research import config
+from labmate import config
 
 PROFILES_FILE = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "profiles.toml"
@@ -171,7 +171,7 @@ def resolve(known, required, option_specs, name=None, user_file=PROFILES_FILE):
         reason = f"auto: {why}"
     else:
         chosen = requested
-        reason = "set by LLM_PROFILE"
+        reason = "set by --profile" if name else "set by LLM_PROFILE"
     if chosen not in defs:
         raise ProfileError(
             f"LLM_PROFILE={chosen!r} is not a known profile. Available: {', '.join(sorted(defs))}."

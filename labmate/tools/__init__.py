@@ -7,13 +7,13 @@
     prompt_hint   optional function(options) -> one line for the system prompt
 
 To add a tool, write the file and add it to _MODULES below. Which tools the
-model actually gets is decided by the profile (research/profiles.py).
+model actually gets is decided by the profile (labmate/profiles.py).
 """
 
 import json
 
-from research.sources import openalex
-from research.tools import get_paper, search_papers, suggest_queries
+from labmate.sources import openalex
+from labmate.tools import get_paper, search_papers, suggest_queries
 
 _MODULES = {
     m.SCHEMA["function"]["name"]: m for m in (suggest_queries, search_papers, get_paper)

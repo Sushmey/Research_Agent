@@ -27,7 +27,7 @@ from types import SimpleNamespace
 
 import requests
 
-from research import config
+from labmate import config, ui
 
 PROVIDERS = ("ollama", "openai_compatible", "anthropic")
 
@@ -109,7 +109,7 @@ def _ollama_chat(s, messages, tools, use_tools, timeout):
         payload["options"] = {"num_ctx": s.num_ctx}
     data = _post(f"{s.base_url}/api/chat", payload, timeout)
     if data.get("done_reason") == "length":
-        print(
+        ui.warn(
             "[llm] warning: the reply was cut off because the context window filled "
             "up. Set LLM_NUM_CTX higher in .env."
         )
@@ -205,7 +205,7 @@ def _openai_chat(s, messages, tools, use_tools, timeout):
     data = _post(f"{s.base_url}/chat/completions", payload, timeout, s.api_key)
     choice = data["choices"][0]
     if choice.get("finish_reason") == "length":
-        print("[llm] warning: the reply was cut off at the model's output limit.")
+        ui.warn("[llm] warning: the reply was cut off at the model's output limit.")
     return _from_openai_message(choice["message"])
 
 
@@ -244,7 +244,7 @@ def chat(messages, tools=None, use_tools=True, timeout=120):
     if s.provider == "ollama":
         return _ollama_chat(s, messages, tools, use_tools, timeout)
     if s.provider == "anthropic":
-        from research.llm import anthropic_provider  # only now, so the package is optional
+        from labmate.llm import anthropic_provider  # only now, so the package is optional
 
         return anthropic_provider.chat(s, messages, tools, use_tools, timeout)
     return _openai_chat(s, messages, tools, use_tools, timeout)
@@ -259,7 +259,7 @@ def chat_json(system_prompt, user_content, timeout=120):
     if s.provider == "ollama":
         return _ollama_json(s, system_prompt, user_content, timeout)
     if s.provider == "anthropic":
-        from research.llm import anthropic_provider
+        from labmate.llm import anthropic_provider
 
         return _parse_json(anthropic_provider.json_text(s, system_prompt, user_content, timeout))
     return _openai_json(s, system_prompt, user_content, timeout)

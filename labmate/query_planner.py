@@ -7,7 +7,7 @@ One JSON call to the model (llm.chat_json). If it fails or the message isn't a
 research question, plan() returns None and the agent loop just runs as before.
 """
 
-from research import llm
+from labmate import llm, ui
 
 MAX_QUERIES = 3
 MAX_WORDS = 8
@@ -56,7 +56,7 @@ def plan(question, earlier_user_messages=()):
     try:
         result = llm.chat_json(_SYSTEM, user, timeout=60)
     except Exception as exc:  # a planner failure must never block the answer
-        print(f"  [plan] skipped ({exc})")
+        ui.progress(f"  [plan] skipped ({exc})")
         return None
     if not isinstance(result, dict) or result.get("is_research_query") is not True:
         return None

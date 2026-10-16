@@ -1,6 +1,6 @@
 """search_papers: keyword search over OpenAlex."""
 
-from research.sources import openalex
+from labmate.sources import openalex
 
 SCHEMA = {
     "type": "function",

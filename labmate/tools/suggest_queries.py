@@ -1,6 +1,6 @@
 """suggest_queries: turn an idea into several keyword queries."""
 
-from research import query_planner
+from labmate import query_planner
 
 SCHEMA = {
     "type": "function",

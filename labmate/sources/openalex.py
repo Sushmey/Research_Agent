@@ -17,7 +17,7 @@ import time
 
 import requests
 
-from research import config
+from labmate import config
 
 BASE_URL = "https://api.openalex.org"
 SEARCH_COST = 0.001
