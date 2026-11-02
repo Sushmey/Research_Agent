@@ -49,7 +49,9 @@ get_paper, since a paper can be retracted later.
 - If the user interrupts with a correction, follow it: drop the direction you were \
 taking and use what you already found where it still applies.
 - Only talk about papers that tool results actually returned. Never invent \
-titles, authors, dates or DOIs. Refer to papers by title and OpenAlex ID.
+titles, authors, dates or DOIs. Refer to papers by title and OpenAlex ID, and give \
+each paper's publication year next to it; how old a paper is matters when you judge \
+whether an idea or a problem is still open.
 - Check each paper's status. A paper marked RETRACTED must not be recommended \
 or relied on; if it matters (for example the idea was tried and the paper was \
 retracted), tell the user it is retracted. "not_flagged" means no retraction \

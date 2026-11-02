@@ -17,7 +17,7 @@ import argparse
 import os
 import sys
 
-from labmate import agent, llm, profiles, ui
+from labmate import agent, llm, profiles, report, ui
 from labmate.session import HISTORY_MESSAGES, LOG_DIR, Session, clear_history, read_recent
 from labmate.sources import openalex
 
@@ -130,7 +130,7 @@ def _ask(args, profile):
     if text is None:
         ui.warn("Stopped.")
         return 130
-    ui.render(text)
+    ui.render(text + report.sources_table(text))
     return 0
 
 
@@ -184,7 +184,7 @@ def _repl(profile):
         if text is None:
             print("(stopped)")
         else:
-            ui.render(text)
+            ui.render(text + report.sources_table(text))
         print()
         ui.progress(f"(OpenAlex spend this session: ${openalex.spent():.4f})\n")
 
