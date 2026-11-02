@@ -100,6 +100,7 @@ class Session:
         ]
         self.loaded = len(self._recent)  # messages carried over from earlier runs
         self._turn = []  # this question's messages, including its tool calls
+        self._clarified = []  # clarifying questions and answers this turn, for the history
         self._mark = 0  # how much of _turn is a consistent state to rewind to
         self._turn_number = 0
 
@@ -135,7 +136,8 @@ class Session:
         """Start a question. The window shown to the model is fixed here, so it
         holds only earlier conversation, not this question."""
         if self._turn:  # the previous question failed before it was answered; keep it in the history
-            self._recent = (self._recent + [self._turn[0]])[-self.window :]
+            self._recent = (self._recent + [self._turn[0]] + self._clarified)[-self.window :]
+        self._clarified = []
         self._turn_number += 1
         self._turn = [{"role": "user", "content": question}]
         self._mark = 1
@@ -145,6 +147,15 @@ class Session:
     def add(self, *messages):
         """Add the model's replies and tool results for this turn (memory only)."""
         self._turn.extend(messages)
+
+    def clarify(self, question, answer):
+        """Record a clarifying question the assistant asked and the user's answer.
+        They are part of the conversation, so they go in the conversation file
+        and the history; a later "the second one" needs them."""
+        pair = [{"role": "assistant", "content": question}, {"role": "user", "content": answer}]
+        for message in pair:
+            self._conversation.write({"ts": _now(), "session": self.id, **message})
+        self._clarified += pair
 
     def mark(self):
         """Note that the turn is in a consistent state right now: every tool
@@ -161,10 +172,10 @@ class Session:
         """Record the answer. The question and answer join the history the
         next turn's window is taken from."""
         self._conversation.write({"ts": _now(), "session": self.id, "role": "assistant", "content": answer})
-        self._recent.append(self._turn[0])
-        self._recent.append({"role": "assistant", "content": answer})
+        self._recent += [self._turn[0]] + self._clarified + [{"role": "assistant", "content": answer}]
         self._recent = self._recent[-self.window :]
         self._turn = []
+        self._clarified = []
 
     # --- debug log -----------------------------------------------------------
 

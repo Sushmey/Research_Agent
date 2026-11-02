@@ -37,6 +37,7 @@ PROFILES_FILE = os.path.join(
 BUILTIN = {
     "small": {
         "tools": {
+            "ask_user": {"max_calls": 2},
             "suggest_queries": True,
             "search_papers": {"limit": 3, "abstract_chars": 500, "max_calls": 3},
             "get_paper": True,
@@ -45,6 +46,7 @@ BUILTIN = {
     },
     "large": {
         "tools": {
+            "ask_user": {"max_calls": 2},
             "suggest_queries": False,
             "search_papers": {"limit": 8, "abstract_chars": 1500, "max_calls": 8},
             "get_paper": True,

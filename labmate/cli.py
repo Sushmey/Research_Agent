@@ -78,6 +78,25 @@ def _steer():
     return text or None
 
 
+def _ask_prompt(question, choices):
+    """Put the assistant's clarifying question to the user. Returns their answer
+    (a number picks one of the choices; Enter means no preference), or None if
+    input has ended. Ctrl-C is not caught here: it pauses the question."""
+    ui.warn(f"\n[question] {question}")
+    for number, choice in enumerate(choices, 1):
+        ui.warn(f"  {number}) {choice}")
+    hint = "a number or your own answer" if choices else "your answer"
+    try:
+        text = ui.ask(f"({hint}; Enter to let it decide) > ").strip()
+    except EOFError:
+        return None
+    if not text:
+        return "No preference: use your judgment and say what you assumed."
+    if text.isdigit() and 1 <= int(text) <= len(choices):
+        return choices[int(text) - 1]
+    return text
+
+
 def _history(args):
     if args.clear:
         clear_history()
@@ -94,10 +113,16 @@ def _history(args):
 
 
 def _ask(args, profile):
-    session = Session(agent.system_prompt(profile))
-    steer = _steer if sys.stdin.isatty() else None
+    interactive = sys.stdin.isatty()  # someone can answer questions and steer
+    session = Session(agent.system_prompt(profile, can_ask=interactive))
     try:
-        text = agent.answer(session, " ".join(args.question), profile, steer=steer)
+        text = agent.answer(
+            session,
+            " ".join(args.question),
+            profile,
+            steer=_steer if interactive else None,
+            ask=_ask_prompt if interactive else None,
+        )
     except Exception as exc:
         session.debug("error", message=str(exc))
         ui.warn(f"[error] {exc}")
@@ -129,7 +154,7 @@ def _slash(line, session, profile):
 
 
 def _repl(profile):
-    session = Session(agent.system_prompt(profile))
+    session = Session(agent.system_prompt(profile, can_ask=True))
     print(_describe(profile))
     if session.loaded:
         print(f"\nContinuing with the last {session.loaded} messages. (/clear to start fresh)")
@@ -150,7 +175,7 @@ def _repl(profile):
                 continue
             return 0
         try:
-            text = agent.answer(session, line, profile, steer=_steer)
+            text = agent.answer(session, line, profile, steer=_steer, ask=_ask_prompt)
         except Exception as exc:
             session.debug("error", message=str(exc))
             ui.warn(f"\n[error] {exc}\n")
