@@ -40,6 +40,7 @@ BUILTIN = {
             "suggest_queries": True,
             "search_papers": {"limit": 3, "abstract_chars": 500, "max_calls": 3},
             "get_paper": True,
+            "read_paper": {"max_chars": 2000, "max_calls": 4},
         }
     },
     "large": {
@@ -47,6 +48,7 @@ BUILTIN = {
             "suggest_queries": False,
             "search_papers": {"limit": 8, "abstract_chars": 1500, "max_calls": 8},
             "get_paper": True,
+            "read_paper": {"max_chars": 6000, "max_calls": 10},
         }
     },
 }

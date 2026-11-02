@@ -12,11 +12,12 @@ model actually gets is decided by the profile (labmate/profiles.py).
 
 import json
 
-from labmate.sources import openalex
-from labmate.tools import get_paper, search_papers, suggest_queries
+from labmate.sources import arxiv, openalex
+from labmate.tools import get_paper, read_paper, search_papers, suggest_queries
 
 _MODULES = {
-    m.SCHEMA["function"]["name"]: m for m in (suggest_queries, search_papers, get_paper)
+    m.SCHEMA["function"]["name"]: m
+    for m in (suggest_queries, search_papers, get_paper, read_paper)
 }
 
 NAMES = set(_MODULES)
@@ -63,7 +64,7 @@ def run_tool(name, arguments, profile):
         return json.dumps(result, ensure_ascii=False)
     except TypeError as exc:  # wrong or missing argument names
         return json.dumps({"error": f"bad arguments for {name}: {exc}"})
-    except openalex.OpenAlexError as exc:
+    except (openalex.OpenAlexError, arxiv.ArxivError) as exc:
         return json.dumps({"error": str(exc)})
     except Exception as exc:  # keep the loop alive on anything unexpected
         return json.dumps({"error": f"{name} failed: {exc}"})

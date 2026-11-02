@@ -15,6 +15,7 @@
 #   every tool       max_calls        most calls per question (1-50)
 #   search_papers    limit            most results per search (1-25)
 #                    abstract_chars   abstract length in search results (100-4000)
+#   read_paper       max_chars        most paper text returned per call (500-20000)
 
 # A tweak of "small" for a bigger model running on Ollama:
 [mine]

@@ -17,7 +17,7 @@ import time
 
 import requests
 
-from labmate import config
+from labmate import config, dates
 
 BASE_URL = "https://api.openalex.org"
 SEARCH_COST = 0.001
@@ -129,6 +129,10 @@ def _to_record(work, abstract_chars=1500):
         "doi": doi,
         "cited_by_count": work.get("cited_by_count"),
     }
+    # Worked out now from today's date, after any caching, so it is never stale.
+    paper_age = dates.age(work.get("publication_date"))
+    if paper_age:
+        record["age"] = paper_age
 
     if work.get("is_retracted"):
         record["status"] = "RETRACTED"
@@ -177,14 +181,23 @@ def search_works(query, year_from=None, year_to=None, limit=8, sort="relevance",
     }
 
 
-def get_work(identifier):
-    """Look up one paper by OpenAlex ID (W123...) or DOI. Free."""
+def _work_path(identifier):
     ident = identifier.strip()
-    if ident.lower().startswith("10."):
-        ident = f"doi:{ident}"
-    elif ident.lower().startswith("https://doi.org/"):
+    if ident.lower().startswith(("10.", "https://doi.org/")):
         ident = f"doi:{ident}"
     elif ident.lower().startswith("https://openalex.org/"):
         ident = ident.rsplit("/", 1)[-1]
-    data = _get(f"/works/{ident}", {"select": _SELECT}, 0.0)
+    return f"/works/{ident}"
+
+
+def get_work(identifier):
+    """Look up one paper by OpenAlex ID (W123...) or DOI. Free."""
+    data = _get(_work_path(identifier), {"select": _SELECT}, 0.0)
     return _to_record(data, abstract_chars=4000)
+
+
+def lookup(identifier):
+    """Like get_work, but also returns the raw work including `locations`
+    (where copies of the paper live), as (record, raw). Free."""
+    data = _get(_work_path(identifier), {"select": _SELECT + ",locations"}, 0.0)
+    return _to_record(data, abstract_chars=4000), data
